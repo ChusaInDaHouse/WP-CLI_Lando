@@ -1,0 +1,36 @@
+name: test
+recipe: wordpress
+config:
+  php: '7.4'
+  via: nginx
+  webroot: public
+  xdebug: true
+  # conf:
+  #   php: php.ini
+env_file:
+  - config/wpconfig.env
+proxy:
+  appserver_nginx:
+    - web.test.lndo.site
+  database:
+    - db.test.lndo.site
+  mailhog:
+    - mail.test.lndo.site
+services:
+  database:
+    portforward: 3318
+    creds:
+      user: wordpress
+      password: wordpress
+      database: wordpress
+  mailhog:
+    type: mailhog
+    portforward: true
+events:
+  post-start:
+    - echo "Checking WordPress. Please standby..."
+    - php config/install-wp.php
+  pre-stop:
+    - echo "Database backup..."
+    - wp db export db_backup.sql --path=/app/public
+    - echo "Database successfully backed up"
